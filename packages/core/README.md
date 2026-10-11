@@ -74,6 +74,23 @@ const mix = interpolate(prepared) // cheap
 
 See the [design RFC](../../docs/rfcs/0001-project-foundations.md) for details.
 
+## Animation timing
+
+`@morphfx/core/animate` has the tween and spring math used by the framework bindings, with no timers or platform APIs, so any frame loop can drive it:
+
+```ts
+import { createTransition } from '@morphfx/core/animate'
+
+const step = createTransition({ type: 'spring', duration: 0.4, bounce: 0.2 })
+const mix = morph(a, b)
+const start = performance.now()
+requestAnimationFrame(function frame(now) {
+  const { value, done } = step((now - start) / 1000)
+  path.setAttribute('d', mix(value))
+  if (!done) requestAnimationFrame(frame)
+})
+```
+
 ## Lower-level helpers
 
 `parsePath(d)` parses path data into commands. `normalize(d)` converts it to absolute cubic Béziers. `serialize(path)` writes it back as path data.
