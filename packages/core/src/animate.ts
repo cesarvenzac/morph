@@ -117,14 +117,7 @@ function spring(
   to: number,
   initialVelocity: number,
 ): (elapsed: number) => TransitionState {
-  const mass = transition.mass ?? 1
-  const duration = Math.max(1e-3, transition.duration ?? 0.4)
-  // A bounce of exactly 1 would oscillate forever.
-  const bounce = Math.min(0.99, Math.max(0, transition.bounce ?? 0))
-  // By feel: the duration is the period of the undamped oscillation, and
-  // bounce lowers the damping ratio from 1 (critical damping).
-  const stiffness = transition.stiffness ?? ((2 * Math.PI) / duration) ** 2 * mass
-  const damping = transition.damping ?? 2 * (1 - bounce) * Math.sqrt(stiffness * mass)
+  const { stiffness, damping, mass } = springPhysics(transition)
   const restDelta = transition.restDelta ?? 0.001
   const restSpeed = transition.restSpeed ?? 0.01
 
@@ -175,11 +168,41 @@ function spring(
   }
 }
 
-const NAMED_EASINGS: Record<string, readonly [number, number, number, number]> = {
+/** Physical parameters of a spring. */
+export interface SpringPhysics {
+  stiffness: number
+  damping: number
+  mass: number
+}
+
+/**
+ * The physical parameters of a spring transition, derived from `duration` and
+ * `bounce` unless `stiffness` and `damping` are given. Lets other animation
+ * engines (such as Reanimated's `withSpring`) reproduce the same motion.
+ */
+export function springPhysics(transition: SpringTransition): SpringPhysics {
+  const mass = transition.mass ?? 1
+  const duration = Math.max(1e-3, transition.duration ?? 0.4)
+  // A bounce of exactly 1 would oscillate forever.
+  const bounce = Math.min(0.99, Math.max(0, transition.bounce ?? 0))
+  // By feel: the duration is the period of the undamped oscillation, and
+  // bounce lowers the damping ratio from 1 (critical damping).
+  const stiffness = transition.stiffness ?? ((2 * Math.PI) / duration) ** 2 * mass
+  const damping = transition.damping ?? 2 * (1 - bounce) * Math.sqrt(stiffness * mass)
+  return { stiffness, damping, mass }
+}
+
+/** Cubic Bézier control points of the named easings. */
+export const EASING_CURVES: Readonly<
+  Record<'easeIn' | 'easeOut' | 'easeInOut', readonly [number, number, number, number]>
+> = {
   easeIn: [0.42, 0, 1, 1],
   easeOut: [0, 0, 0.58, 1],
   easeInOut: [0.42, 0, 0.58, 1],
 }
+
+const NAMED_EASINGS: Readonly<Record<string, readonly [number, number, number, number]>> =
+  EASING_CURVES
 
 /** Turns an `Easing` into a function from linear progress to eased progress. */
 export function easingFunction(easing: Easing): (t: number) => number {

@@ -4,7 +4,9 @@ import {
   createTransition,
   cubicBezier,
   DEFAULT_TRANSITION,
+  EASING_CURVES,
   easingFunction,
+  springPhysics,
   type Transition,
   type TransitionState,
 } from '../src/animate'
@@ -180,5 +182,27 @@ describe('spring', () => {
       ),
       { numRuns: 200 },
     )
+  })
+})
+
+describe('springPhysics', () => {
+  it('derives stiffness and damping from duration and bounce', () => {
+    const { stiffness, damping, mass } = springPhysics({ type: 'spring', duration: 0.5, bounce: 0 })
+    expect(mass).toBe(1)
+    expect(stiffness).toBeCloseTo(((2 * Math.PI) / 0.5) ** 2, 9)
+    // No bounce: critically damped.
+    expect(damping).toBeCloseTo(2 * Math.sqrt(stiffness), 9)
+  })
+
+  it('keeps physical parameters as given', () => {
+    expect(springPhysics({ type: 'spring', stiffness: 120, damping: 14, mass: 2 })).toEqual({
+      stiffness: 120,
+      damping: 14,
+      mass: 2,
+    })
+  })
+
+  it('exposes the named easing curves', () => {
+    expect(EASING_CURVES.easeInOut).toEqual([0.42, 0, 0.58, 1])
   })
 })
