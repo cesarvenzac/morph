@@ -1,25 +1,35 @@
-# Morph
+# morphfx
 
 > Morph anything into anything, starting with SVG shapes, with one API for **React / Next.js** and **React Native / Expo**.
 
-**Status: early design phase.** Nothing is published yet.
+**Status: early development.** Nothing is published on npm yet.
 
 ## What we're building
 
 An open-source morphing engine and set of bindings:
 
-- **Core:** a framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth.
-- **React (web / Next.js):** `<MorphPath d={…} />` that animates whenever `d` changes. It is SSR-friendly and honors reduced motion.
-- **React Native (Expo):** the same API, running on the UI thread with `react-native-svg` + Reanimated, or with Skia.
-- **Bring your own animation library:** Motion, Reanimated, GSAP, react-spring, or the tiny built-in driver.
+| Package | What it is | Status |
+|---|---|---|
+| [`@morphfx/core`](packages/core) | Framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth | Parser and normalizer done; morphing in progress |
+| `@morphfx/react` | `<MorphPath d={…} />` for React and Next.js: animates whenever `d` changes, SSR-friendly, honors reduced motion | Planned |
+| `@morphfx/react-native` | The same API for React Native and Expo, running on the UI thread with `react-native-svg` + Reanimated, or with Skia (`/skia`) | Planned |
 
-Text, image and UI morphing may come later.
+Bring your own animation library (Motion, Reanimated, GSAP, react-spring), or use the small built-in driver. Text, image and UI morphing may come later.
 
-## Design discussion
+## Design
 
-Start with **[RFC 0001: Project foundations](docs/rfcs/0001-project-foundations.md)**. It covers the landscape, the algorithm, the API, the stack, the contribution model, the docs website, the roadmap and the open questions.
-Feedback is welcome through PR comments or issues.
+Start with **[RFC 0001: Project foundations](docs/rfcs/0001-project-foundations.md)**. It covers the landscape, the algorithm, the API, the stack, the contribution model, the docs website, the roadmap and the decisions taken so far.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Quick start:
+
+```sh
+pnpm install
+pnpm build
+pnpm test
+```
 
 ## License
 
-To be decided (MIT proposed in the RFC).
+[MIT](LICENSE)

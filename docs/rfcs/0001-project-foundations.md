@@ -2,22 +2,52 @@
 
 | | |
 |---|---|
-| **Status** | Draft. Open for discussion |
+| **Status** | Accepted (2026-10-11). See the [decision log](#decision-log); a few minor items are still open |
 | **Created** | 2026-10-11 |
 | **Scope** | Vision, architecture, API, stack, contribution model, docs site, roadmap |
 
-> **Naming note:** this document uses `@morph/*` as a **placeholder** package scope.
-> The `@morph` npm scope already exists and belongs to someone else, so we need to pick a real
-> name (see [§11 Naming](#11-naming)).
-
 This is the first brainstorm for the project, written as an RFC so we can comment on it line by line in a pull request.
-Each section ends with a **recommendation**. The things we still have to decide are collected in
+Each section ends with a **recommendation**. The [decision log](#decision-log) records what we settled; anything still undecided is in
 [§13 Open questions](#13-open-questions-decisions-needed).
+
+---
+
+## Decision log
+
+Decided on 2026-10-11:
+
+| Topic | Decision |
+|---|---|
+| **Name** | **morphfx**. npm scope `@morphfx/*` (`@morphfx/core`, `@morphfx/react`, `@morphfx/react-native`) |
+| **License** | **MIT** |
+| **React floor** | **React 19** |
+| **Skia packaging** | **`/skia` subpath** of `@morphfx/react-native`, with `@shopify/react-native-skia` as an optional peer dependency. We can split it into its own package later without changing the API |
+| **Animation driver** | **Our own small built-in driver** (tween + spring), written in TypeScript. Motion, Reanimated, GSAP and the like remain optional integrations |
+| **Rust / WebAssembly** | Considered and **deferred**: the engine stays in TypeScript for now. See [Should the engine be written in Rust?](#should-the-engine-be-written-in-rust) for the reasoning and for what would make us revisit |
+| **Separate repository for the engine** | **Not now.** The engine stays in this monorepo but is published as its own package, `@morphfx/core`, which any JS project can already use on its own |
+| **Defaults adopted** | The other recommendations in this RFC stand unless someone objects: ESM + CJS in 0.x, Biome, Fumadocs, Changesets, an `AGENTS.md`, English-first docs |
+
+### Should the engine be written in Rust?
+
+The idea is appealing: one fast engine that could be reused outside JavaScript later. We looked at where the time actually goes:
+
+- **The built-in driver** (tween and spring) does a few multiplications per frame. Crossing into WebAssembly or a native module costs more than the arithmetic it would replace.
+- **Per-frame interpolation** is one loop over a few hundred to a few thousand numbers, which JS engines compile to fast machine code. Most of the per-frame cost comes *after* it: building the `d` string, then the browser or native side re-parsing and rasterizing the path. A Rust version would also have to hand a string back across the WebAssembly boundary every frame, which adds copying and text decoding.
+- **On React Native**, Hermes gained WebAssembly support in 2026, but as an early preview that isn't production-ready. It also translates WebAssembly into the same bytecode as JavaScript and runs it on the same interpreter, so it brings no speedup. Real native speed would need a native module (for example through uniffi-bindgen-react-native or Nitro Modules). That breaks Expo Go, adds iOS and Android build steps for every user, and is awkward to call from Reanimated worklets on the UI thread.
+- **On the web**, WebAssembly adds asynchronous initialization, bundler configuration, SSR/edge caveats and tens of kilobytes, against a 5 kB budget for the whole core.
+- **Where Rust could genuinely help:** `prepare()` on very large paths (thousands of segments, such as maps or detailed illustrations). That is a one-off cost per morph, not a per-frame one.
+
+**Decision:** keep TypeScript and keep the door open:
+
+1. Write the algorithm down (Concepts docs and code comments), and keep the fixture corpus **language-neutral** (SVG and JSON files with expected results), so another implementation could be validated against the same tests.
+2. Benchmark `prepare()` from Phase 1 onward (CodSpeed). If real users hit a bottleneck there, prototype an **optional** accelerator (for example `@morphfx/core-wasm`) behind the same API, so nothing changes for everyone else.
+3. If we later need the engine outside JavaScript (Swift, Kotlin, Flutter, game engines), a Rust port becomes worthwhile. It can live in this monorepo (a `crates/` folder) or be split out at that point.
 
 ---
 
 ## Table of contents
 
+0. [Decision log](#decision-log)
 1. [TL;DR](#1-tldr)
 2. [Why this library? (landscape)](#2-why-this-library-landscape)
 3. [Vision, goals, non-goals](#3-vision-goals-non-goals)
@@ -51,7 +81,7 @@ Each section ends with a **recommendation**. The things we still have to decide 
 | **Release** | Changesets, GitHub Actions, npm Trusted Publishing (OIDC + provenance), and pkg.pr.new previews on every PR |
 | **Docs site** | Next.js + Fumadocs on Vercel, with an interactive **Playground** and an "explain the algorithm" section |
 | **License** | MIT |
-| **Name** | Keep the "Morph" brand but claim a free npm scope (candidates in [§11](#11-naming)) |
+| **Name** | **morphfx**, published under the `@morphfx` npm scope ([§11](#11-naming)) |
 
 ---
 
@@ -196,7 +226,7 @@ Empty paths; a single point; zero-length segments; several `M` without `Z`; rela
 ### 5.1 Core: framework-agnostic
 
 ```ts
-import { morph, prepare, interpolate } from '@morph/core'
+import { morph, prepare, interpolate } from '@morphfx/core'
 
 // One-liner: returns an interpolator (t: number) => string
 const mix = morph(playIcon, pauseIcon)
@@ -222,13 +252,13 @@ const mix2 = interpolate(prepared) // cheap
 
 Helpers: `parse`, `serialize`, `normalize`, `shapeToPath`, `bounds`, and later `fit`.
 
-### 5.2 React DOM / Next.js (`@morph/react`)
+### 5.2 React DOM / Next.js (`@morphfx/react`)
 
 **Declarative state toggle:**
 
 ```tsx
 'use client'
-import { MorphPath } from '@morph/react'
+import { MorphPath } from '@morphfx/react'
 
 export function PlayPause({ playing }: { playing: boolean }) {
   return (
@@ -258,7 +288,7 @@ export function PlayPause({ playing }: { playing: boolean }) {
 
 ```tsx
 import { motion, useScroll, useTransform } from 'motion/react'
-import { mixer } from '@morph/core'
+import { mixer } from '@morphfx/core'
 
 const { scrollYProgress } = useScroll()
 const d = useTransform(scrollYProgress, [0, 0.5, 1], [circle, star, heart], { mixer })
@@ -273,15 +303,15 @@ const state = { t: 0 }
 gsap.to(state, { t: 1, duration: 0.6, onUpdate: () => path.setAttribute('d', mix(state.t)) })
 ```
 
-**Zero-JS / server-only (later phase):** prepared paths share an identical structure, so browsers can interpolate them **natively with SMIL** (`<animate attributeName="d" values="…">`), which works in all major browsers including Safari. A server-safe `<StaticMorph>` exported from `@morph/react/static` can render inside a React Server Component with **no client JavaScript**, which suits loaders, hero illustrations and looping decorations. (The CSS `d` property is not reliable in Safari, so we shouldn't depend on it.)
+**Zero-JS / server-only (later phase):** prepared paths share an identical structure, so browsers can interpolate them **natively with SMIL** (`<animate attributeName="d" values="…">`), which works in all major browsers including Safari. A server-safe `<StaticMorph>` exported from `@morphfx/react/static` can render inside a React Server Component with **no client JavaScript**, which suits loaders, hero illustrations and looping decorations. (The CSS `d` property is not reliable in Safari, so we shouldn't depend on it.)
 
-### 5.3 React Native / Expo (`@morph/react-native`)
+### 5.3 React Native / Expo (`@morphfx/react-native`)
 
 **With `react-native-svg` + Reanimated (default):**
 
 ```tsx
 import Svg from 'react-native-svg'
-import { MorphPath } from '@morph/react-native'
+import { MorphPath } from '@morphfx/react-native'
 
 <Svg viewBox="0 0 24 24" width={24} height={24}>
   <MorphPath d={playing ? PAUSE : PLAY} transition={{ type: 'spring' }} fill="black" />
@@ -297,11 +327,11 @@ const progress = useSharedValue(0) // updated from Gesture Handler, a ScrollView
 
 Under the hood: `prepare()` runs on the JS thread (memoized), the plain arrays are captured by a worklet, and `useAnimatedProps` writes `d` **on the UI thread** every frame. Built-in transitions use Reanimated's own `withSpring` and `withTiming`.
 
-**With Skia (best for heavy shapes), via the `@morph/react-native/skia` subpath:**
+**With Skia (best for heavy shapes), via the `@morphfx/react-native/skia` subpath:**
 
 ```tsx
 import { Canvas, Path } from '@shopify/react-native-skia'
-import { useMorphPath } from '@morph/react-native/skia'
+import { useMorphPath } from '@morphfx/react-native/skia'
 
 const path = useMorphPath([a, b], progress) // SharedValue<SkPath>
 <Canvas style={{ width: 200, height: 200 }}>
@@ -321,7 +351,7 @@ Our core makes both paths structurally identical, so Skia's native path interpol
 
 - Do we mirror Motion's `transition` shape exactly? **Recommendation: yes**, because it's familiar.
 - The "progress source" protocol on web: `number | { get(): number; on('change', cb): () => void }` (which is compatible with `MotionValue`).
-- Should `@morph/react` depend on Motion? **Recommendation: no.** Ship a tiny built-in driver (rAF tween + spring) and keep Motion optional.
+- Should `@morphfx/react` depend on Motion? **Recommendation: no.** Ship a tiny built-in driver (rAF tween + spring) and keep Motion optional.
 
 ---
 
@@ -330,10 +360,10 @@ Our core makes both paths structurally identical, so Skia's native path interpol
 ```
 morph/
 ├── packages/
-│   ├── core/            @morph/core           pure TS, 0 deps; any JS runtime (browser, Node, RSC, Hermes, worklets)
-│   │                    @morph/core/animate   tiny driver: rAF tween + spring (used by the web bindings)
-│   ├── react/           @morph/react          React DOM bindings; /static = RSC-safe SMIL output (later)
-│   ├── react-native/    @morph/react-native   react-native-svg + Reanimated; /skia subpath (optional peer)
+│   ├── core/            @morphfx/core           pure TS, 0 deps; any JS runtime (browser, Node, RSC, Hermes, worklets)
+│   │                    @morphfx/core/animate   tiny driver: rAF tween + spring (used by the web bindings)
+│   ├── react/           @morphfx/react          React DOM bindings; /static = RSC-safe SMIL output (later)
+│   ├── react-native/    @morphfx/react-native   react-native-svg + Reanimated; /skia subpath (optional peer)
 │   └── (later)          vue, svelte, solid, web component, text, image…
 ├── apps/
 │   ├── docs/            Next.js + Fumadocs: docs, playground, gallery (also our web dev sandbox)
@@ -347,11 +377,11 @@ morph/
 
 ```mermaid
 flowchart TB
-  core["@morph/core<br/>geometry + interpolators"]
-  animate["@morph/core/animate<br/>tween / spring driver"]
-  react["@morph/react"]
-  rn["@morph/react-native"]
-  skia["@morph/react-native/skia"]
+  core["@morphfx/core<br/>geometry + interpolators"]
+  animate["@morphfx/core/animate<br/>tween / spring driver"]
+  react["@morphfx/react"]
+  rn["@morphfx/react-native"]
+  skia["@morphfx/react-native/skia"]
   core --> animate
   animate --> react
   core --> react
@@ -365,7 +395,7 @@ flowchart TB
 ### Key technical points
 
 - **Worklet-compatible hot path.** The per-frame functions (`lerp`, `serialize`) are pure, closure-free functions carrying a `'worklet'` directive. On the web that directive is a harmless string; on RN, the Reanimated / worklets Babel plugin turns them into UI-thread functions. Heavy `prepare()` work never runs on the UI thread.
-- **`'use client'`** must be kept in the built output of `@morph/react` for the Next.js App Router. Core has no directive, so Server Components can import it.
+- **`'use client'`** must be kept in the built output of `@morphfx/react` for the Next.js App Router. Core has no directive, so Server Components can import it.
 - **One RN package with a `/skia` subpath** (Skia is an *optional* peer dependency) rather than a separate package. That keeps the install simple, and we can revisit if peer-dependency warnings get annoying.
 - **Separate web and RN packages** (rather than one universal package with a `react-native` export condition) because their peer dependencies are very different. Both share the same API surface, and on Expo web the RN package works through `react-native-web` and `react-native-svg`.
 
@@ -386,15 +416,15 @@ Latest versions on npm as of 2026-10-11: React 19.3, Next.js 16.4, Expo SDK 57 /
 | Concern | Recommendation | Why | Alternatives considered |
 |---|---|---|---|
 | Language | **TypeScript**, strict, `isolatedDeclarations` | The types are part of the product, and isolated declarations make `.d.ts` emit fast | — |
-| Type checker | **TypeScript 7** (native) for `typecheck` | Much faster checks | TS 6.x where a tool still needs the JS compiler API (TypeDoc, Twoslash, attw); verify during scaffolding |
+| Type checker | **TypeScript 7** (native) for `typecheck` | Much faster checks. Works with our setup: tsdown emits `.d.ts` through `isolatedDeclarations`, and attw ships its own TypeScript | TS 6.x if a future tool (TypeDoc, Twoslash) still needs the JS compiler API |
 | Runtime for contributors | **Node 24 LTS** (`.nvmrc`), with `packageManager` pinned through Corepack | tsdown needs Node ≥ 22.18 | — |
-| Package manager | **pnpm** workspaces + **catalogs** | Strict and fast; catalogs keep React and RN versions aligned across apps; Expo supports isolated installs | Bun, Yarn 4 |
+| Package manager | **pnpm 12** workspaces + **catalogs** | Strict and fast; catalogs keep React and RN versions aligned across apps; Expo supports isolated installs | Bun, Yarn 4 |
 | Task runner | **Turborepo** | Simple, cached, free remote cache on Vercel | Nx (more power, more weight), plain `pnpm -r` |
 | Library build | **tsdown** (Rolldown), shipping ESM + CJS + `.d.ts` | Actively developed successor to tsup, fast, good `exports` handling | tsup (maintenance mode), `react-native-builder-bob` (RN standard; fallback if Metro edge cases show up), unbuild |
 | Module format | **ESM + CJS** during 0.x, `sideEffects: false`, an explicit `exports` map | Avoids Jest and older-tooling issues in RN apps; costs nothing with tsdown. Revisit ESM-only for 1.0 | ESM-only |
 | Lint + format | **Biome** | One fast tool, little configuration | ESLint 10 + Prettier, Oxlint |
 | Unit tests | **Vitest** | Fast, ESM-native, built-in `bench` | Jest |
-| DOM tests | **Vitest browser mode** (Playwright provider) | Real SVG rendering for `@morph/react` | Playwright Test |
+| DOM tests | **Vitest browser mode** (Playwright provider) | Real SVG rendering for `@morphfx/react` | Playwright Test |
 | Property tests | **fast-check** | Fuzz the parser and check invariants on random paths | — |
 | Visual regression | **Filmstrips** (`t = 0 … 1`) rendered headless, then PNG diff, with diff images posted in PR comments | Catches ugly morphs, which unit tests can't | Argos / Chromatic as a hosted UI |
 | RN tests | **Jest** + `@testing-library/react-native` (Reanimated mocks); later **Maestro** E2E on the Expo app | Standard in the RN ecosystem | Detox |
@@ -426,9 +456,9 @@ Latest versions on npm as of 2026-10-11: React 19.3, Next.js 16.4, Expo SDK 57 /
 
 | Budget | Target |
 |---|---|
-| `@morph/core` | ≤ 5 kB min+gzip |
-| `@morph/react` (on top of core) | ≤ 2 kB |
-| `@morph/react-native` (on top of core) | ≤ 2 kB |
+| `@morphfx/core` | ≤ 5 kB min+gzip |
+| `@morphfx/react` (on top of core) | ≤ 2 kB |
+| `@morphfx/react-native` (on top of core) | ≤ 2 kB |
 | `prepare()` for two icons (≤ 50 segments each) | < 1 ms on a mid-range laptop |
 | Per-frame interpolation | Holds 60 fps for icon-sized morphs on a low-end Android device, on the UI thread |
 
@@ -495,7 +525,7 @@ Big changes (a new package, a breaking public API change, a new morph type, a ma
 
 ### Stack
 
-**Next.js + Fumadocs** (MDX, built-in search, TypeScript type tables, Twoslash hovers in code blocks, generated `llms.txt` so AI assistants can read the docs), Tailwind, deployed on **Vercel** with preview deployments on every PR. Building the site on Next.js also dogfoods `@morph/react` with SSR and RSC.
+**Next.js + Fumadocs** (MDX, built-in search, TypeScript type tables, Twoslash hovers in code blocks, generated `llms.txt` so AI assistants can read the docs), Tailwind, deployed on **Vercel** with preview deployments on every PR. Building the site on Next.js also dogfoods `@morphfx/react` with SSR and RSC.
 *Alternatives considered:* Astro Starlight (great, but not React-first for our live demos), Nextra (slower release pace), VitePress (Vue).
 
 ### Information architecture
@@ -550,8 +580,13 @@ We want to keep the "Morph" brand, but the npm namespace is crowded. Checked on 
 | `@morphfx/*` | **Free** |
 | `@morph-dev/*`, `@morphdev/*`, `@getmorph/*`, `@morph-sh/*` | **Free** |
 
-**Recommendation:** pick a scope and claim it **right away** by creating the npm org (it's free for public packages). Ideally create a GitHub org with the same name, move this repo into it, and buy the matching domain. We could not check domain availability from this environment.
-Package names would then be `@<scope>/core`, `@<scope>/react`, `@<scope>/react-native`.
+**Decision: morphfx.** Packages are `@morphfx/core`, `@morphfx/react` and `@morphfx/react-native`.
+
+Still to do:
+
+- **Create the `morphfx` npm organization now** (free for public packages), before someone else takes the scope. The unscoped `morphfx` name was also free on 2026-10-11 and is worth reserving.
+- **Domain:** on 2026-10-11, `morphfx.dev`, `morphfx.io` and `morphfx.org` were available and `morphfx.com` was taken. `morphfx.dev` fits a developer tool best.
+- **GitHub organization** (optional but recommended): create `morphfx` and transfer this repository into it. GitHub redirects the old URL.
 
 ---
 
@@ -559,7 +594,7 @@ Package names would then be `@<scope>/core`, `@<scope>/react`, `@<scope>/react-n
 
 | Phase | Content | Exit criteria |
 |---|---|---|
-| **0. Foundations** (~1 week) | Settle §13; claim the npm scope, GitHub org and domain; scaffold the monorepo, tooling, CI and governance files; seed the fixture corpus (~50 pairs) | `pnpm i && pnpm build && pnpm test` passes in CI |
+| **0. Foundations** (~1 week) | Settle §13; claim the npm scope, GitHub org and domain; scaffold the monorepo, tooling, CI and governance files; seed the fixture corpus (~50 pairs). *Scaffolding is done (plus the parser and normalizer that start Phase 1); the fixture corpus and the npm org, domain and GitHub org remain* | `pnpm i && pnpm build && pnpm test` passes in CI |
 | **1. Core engine** | Parser, normalize, equalize, align, interpolate, serialize. Single subpath first, then multiple subpaths and holes. Property tests, filmstrips, benchmarks vs flubber | Better than flubber on our quality metrics for the corpus; `0.1.0` of core on the `next` tag |
 | **2. React bindings** | `<MorphPath>`, `useMorph`, built-in tween/spring driver (interruptible), Motion `mixer`, SSR, reduced motion, debug overlay | Used in one of our own Next.js projects |
 | **3. React Native** | `react-native-svg` + Reanimated binding, Skia subpath, Expo example app, on-device performance checks | 60 fps for icon morphs on a low-end Android device |
@@ -573,20 +608,13 @@ Package names would then be `@<scope>/core`, `@<scope>/react`, `@<scope>/react-n
 
 ## 13. Open questions (decisions needed)
 
-Comment on the PR with your choice; the **recommendation** is in bold.
+Resolved on 2026-10-11 (see the [decision log](#decision-log)): name (**morphfx**), license (**MIT**), React floor (**19**), Skia packaging (**`/skia` subpath**), animation driver (**our own, in TypeScript**), module format, lint and format tooling, docs framework, `AGENTS.md`, docs language.
 
-1. **Name and npm scope:** `@usemorph`, `@morph-kit`, `@morphfx`, or something else? Also: a GitHub org and a domain.
-2. **License:** **MIT** / Apache-2.0 (adds an explicit patent grant) / ISC.
-3. **React floor:** **19 only** / 18.3+.
-4. **Skia packaging:** **`/skia` subpath of the RN package** / a separate package.
-5. **Animation driver:** **our own tiny built-in driver, with Motion optional** / require Motion.
-6. **Module format in 0.x:** **ESM + CJS** / ESM only.
-7. **Lint and format:** **Biome** / ESLint + Prettier.
-8. **Docs framework:** **Fumadocs** / Starlight.
-9. **Integrations to prioritize:** **Motion + Reanimated + Skia (must have)**, then GSAP and react-spring (nice to have, as docs recipes).
-10. **Maintainers:** who reviews what (CODEOWNERS)?
-11. **AI-assisted contributions:** add an `AGENTS.md` and a short policy ("allowed; the contributor is responsible for every line")? **Recommendation: yes.**
-12. **Docs language:** **English first**, French later?
+Still open:
+
+1. **Maintainers:** who reviews what? `CODEOWNERS` currently lists only @cesarvenzac.
+2. **Integrations to prioritize:** **Motion + Reanimated + Skia (must have)**, then GSAP and react-spring (nice to have, as docs recipes).
+3. **Code of conduct contact:** a private address for reports (for example `conduct@morphfx.dev` once the domain exists).
 
 ---
 
