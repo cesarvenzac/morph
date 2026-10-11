@@ -24,13 +24,16 @@ pnpm test
 ```
 packages/
   core/          @morphfx/core: framework-agnostic geometry engine (zero dependencies)
+  react/         @morphfx/react: <MorphPath> and useMorph for React and Next.js
+apps/
+  next-example/  Next.js App Router app using @morphfx/react
 fixtures/        shapes and morph pairs shared by the test suites
-scripts/         development tools (filmstrip renderer)
+scripts/         development tools (filmstrip renderer, build checks)
 docs/rfcs/       design decisions
 .changeset/      pending release notes
 ```
 
-The React, React Native and docs packages will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses.
+The React Native package and the docs site will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses. To try changes in a real app, run `pnpm --filter @morphfx/next-example dev` after building the packages.
 
 ## Scripts
 
