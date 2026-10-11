@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "morphfx example",
+    "slug": "morphfx-example",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    }
+  }
+}

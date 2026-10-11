@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalPassThroughEnv": ["NEXT_TELEMETRY_DISABLED"],
+  "globalPassThroughEnv": ["NEXT_TELEMETRY_DISABLED", "EXPO_NO_TELEMETRY", "CI"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

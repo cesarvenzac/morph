@@ -23,3 +23,24 @@ catalog:
   vite: ^8.3.4
   vitest: ^5.0.3
 
+# Versions bundled with Expo SDK 57 (React Native needs the exact React version
+# its renderer was built with). Reference them with "catalog:expo".
+catalogs:
+  expo:
+    '@expo/metro-runtime': ~57.0.16
+    '@react-native/metro-config': 0.86.3
+    '@shopify/react-native-skia': 2.6.2
+    expo: ~57.0.27
+    expo-status-bar: ~57.0.1
+    react: 19.2.3
+    react-dom: 19.2.3
+    react-native: 0.86.3
+    react-native-reanimated: 4.5.1
+    react-native-svg: 15.15.4
+    react-native-web: ~0.21.0
+    react-native-worklets: 0.10.1
+
+# Install scripts allowed to run. Skia's downloads native binaries, which only
+# apps building for iOS or Android with Skia need (the examples don't).
+allowBuilds:
+  '@shopify/react-native-skia': false
