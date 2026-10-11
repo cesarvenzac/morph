@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/cesarvenzac/morph/discussions
+    about: Ask questions and discuss ideas in GitHub Discussions.
+  - name: Security vulnerabilities
+    url: https://github.com/cesarvenzac/morph/security/advisories/new
+    about: Report security issues privately, not in a public issue.

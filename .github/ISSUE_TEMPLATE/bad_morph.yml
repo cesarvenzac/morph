@@ -1,0 +1,44 @@
+name: Bad morph
+description: A morph between two shapes looks wrong (twists, collapses, jumps…).
+labels: ['quality']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bad morphs are our most valuable bug reports: every confirmed case becomes a permanent regression test.
+  - type: textarea
+    id: from
+    attributes:
+      label: Source shape
+      description: The `d` attribute of the source path (or paste the whole SVG).
+      render: svg
+    validations:
+      required: true
+  - type: textarea
+    id: to
+    attributes:
+      label: Target shape
+      description: The `d` attribute of the target path (or paste the whole SVG).
+      render: svg
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options used
+      description: The options passed to morphfx, if any.
+      render: ts
+  - type: textarea
+    id: problem
+    attributes:
+      label: What looks wrong?
+      description: Describe it, ideally with a screenshot or screen recording.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: 0.1.0
+    validations:
+      required: true
