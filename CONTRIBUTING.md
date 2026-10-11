@@ -25,16 +25,18 @@ pnpm test
 packages/
   core/          @morphfx/core: framework-agnostic geometry engine (zero dependencies)
   react/         @morphfx/react: <MorphPath> and useMorph for React and Next.js
+  react-native/  @morphfx/react-native: <MorphPath> for react-native-svg + Reanimated, useMorphPath for Skia
 apps/
   playground/    interactive playground (pnpm playground), uses the packages' source directly
   next-example/  Next.js App Router app using @morphfx/react
+  expo-example/  Expo app (iOS, Android, web) using @morphfx/react-native
 fixtures/        shapes and morph pairs shared by the test suites
 scripts/         development tools (filmstrip renderer, build checks)
 docs/rfcs/       design decisions
 .changeset/      pending release notes
 ```
 
-The React Native package and the docs site will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses. To try changes in a real app, run `pnpm --filter @morphfx/next-example dev` after building the packages.
+The docs site will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses. To try changes in a real app, build the packages (`pnpm build`), then run `pnpm --filter @morphfx/next-example dev` or `pnpm --filter @morphfx/expo-example start`.
 
 ## Scripts
 
@@ -74,6 +76,11 @@ Inside a package, `pnpm dev` rebuilds on change and `pnpm test:watch` reruns tes
 ### Reporting a bad morph
 
 If a morph looks wrong, open an issue with **both path strings** (or SVG files) and what you expected. Every confirmed case becomes a permanent regression fixture in [`fixtures/`](fixtures/README.md).
+
+### Rules for `@morphfx/react-native`
+
+- Code that runs on the UI thread is a **worklet**: start it with a `'worklet'` directive, keep it self-contained, and only use plain data from the JS thread.
+- The Reanimated Babel plugin turns worklets into constants, which are not hoisted: **define each worklet before the worklets that call it**. `pnpm check:packages` compiles the built package with the plugin and fails if a worklet is used before it is defined.
 
 ### Changing the morphing algorithm
 
