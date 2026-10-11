@@ -10,7 +10,7 @@ An open-source morphing engine and set of bindings:
 
 | Package | What it is | Status |
 |---|---|---|
-| [`@morphfx/core`](packages/core) | Framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth | Parser and normalizer done; morphing in progress |
+| [`@morphfx/core`](packages/core) | Framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth | `morph()` works and is tested; not published yet |
 | `@morphfx/react` | `<MorphPath d={…} />` for React and Next.js: animates whenever `d` changes, SSR-friendly, honors reduced motion | Planned |
 | `@morphfx/react-native` | The same API for React Native and Expo, running on the UI thread with `react-native-svg` + Reanimated, or with Skia (`/skia`) | Planned |
 
