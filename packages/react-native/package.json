@@ -1,6 +1,6 @@
 {
   "name": "@morphfx/react-native",
-  "version": "0.0.0",
+  "version": "0.1.0-next.0",
   "description": "SVG path morphing for React Native and Expo, on the UI thread with react-native-svg and Reanimated, or with Skia.",
   "keywords": [
     "svg",
