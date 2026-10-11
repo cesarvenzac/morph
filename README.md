@@ -16,6 +16,15 @@ An open-source morphing engine and set of bindings:
 
 Bring your own animation library (Motion, Reanimated, GSAP, react-spring), or use the small built-in driver. Text, image and UI morphing may come later.
 
+## Try it
+
+```sh
+pnpm install
+pnpm playground
+```
+
+The [playground](apps/playground) lets you morph between shapes, interrupt morphs, tune springs, paste your own SVG paths and inspect how points pair up. There is also a [Next.js example](apps/next-example).
+
 ## Design
 
 Start with **[RFC 0001: Project foundations](docs/rfcs/0001-project-foundations.md)**. It covers the landscape, the algorithm, the API, the stack, the contribution model, the docs website, the roadmap and the decisions taken so far.

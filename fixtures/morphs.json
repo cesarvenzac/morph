@@ -29,7 +29,10 @@
     "wave": "M10 50 C30 20 70 80 90 50",
     "zigzag": "M10 50 L30 30 L50 70 L70 30 L90 50",
     "spiral-ish": "M50 50 C60 40 70 50 65 60 C55 75 35 65 35 50 C35 30 60 22 75 35",
-    "arc-open": "M20 70 A35 35 0 0 1 80 70"
+    "arc-open": "M20 70 A35 35 0 0 1 80 70",
+    "diamond": "M50 8 L92 50 L50 92 L8 50 Z",
+    "moon": "M63.68 12.41 A40 40 0 1 0 63.68 87.59 A40.2 40.2 0 0 1 63.68 12.41 Z",
+    "bolt": "M58 6 L18 56 H46 L38 94 L82 40 H54 Z"
   },
   "pairs": [
     ["circle", "square"],
@@ -58,6 +61,10 @@
     ["arc-open", "line"],
     ["line", "circle"],
     ["circle", "arc-open"],
-    ["heart", "two-circles"]
+    ["heart", "two-circles"],
+    ["diamond", "square"],
+    ["moon", "circle"],
+    ["bolt", "star"],
+    ["moon", "heart"]
   ]
 }

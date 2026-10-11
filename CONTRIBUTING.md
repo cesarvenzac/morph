@@ -26,6 +26,7 @@ packages/
   core/          @morphfx/core: framework-agnostic geometry engine (zero dependencies)
   react/         @morphfx/react: <MorphPath> and useMorph for React and Next.js
 apps/
+  playground/    interactive playground (pnpm playground), uses the packages' source directly
   next-example/  Next.js App Router app using @morphfx/react
 fixtures/        shapes and morph pairs shared by the test suites
 scripts/         development tools (filmstrip renderer, build checks)
@@ -48,6 +49,7 @@ Run from the repository root:
 | `pnpm check:packages` | Validates published package shape (publint, Are The Types Wrong) |
 | `pnpm size` | Checks bundle size budgets (size-limit) |
 | `pnpm bench` | Runs the performance benchmarks of `@morphfx/core` |
+| `pnpm playground` | Starts the interactive playground, with live reload of the packages' source |
 | `pnpm filmstrip` | Renders every fixture morph into `.filmstrip/index.html` to review quality by eye |
 | `pnpm changeset` | Adds a changeset describing your change |
 
