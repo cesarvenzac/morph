@@ -24,6 +24,8 @@ pnpm test
 ```
 packages/
   core/          @morphfx/core: framework-agnostic geometry engine (zero dependencies)
+fixtures/        shapes and morph pairs shared by the test suites
+scripts/         development tools (filmstrip renderer)
 docs/rfcs/       design decisions
 .changeset/      pending release notes
 ```
@@ -42,6 +44,8 @@ Run from the repository root:
 | `pnpm lint` / `pnpm lint:fix` | Lints and checks formatting (Biome) / fixes what can be fixed |
 | `pnpm check:packages` | Validates published package shape (publint, Are The Types Wrong) |
 | `pnpm size` | Checks bundle size budgets (size-limit) |
+| `pnpm bench` | Runs the performance benchmarks of `@morphfx/core` |
+| `pnpm filmstrip` | Renders every fixture morph into `.filmstrip/index.html` to review quality by eye |
 | `pnpm changeset` | Adds a changeset describing your change |
 
 Inside a package, `pnpm dev` rebuilds on change and `pnpm test:watch` reruns tests.
@@ -64,7 +68,11 @@ Inside a package, `pnpm dev` rebuilds on change and `pnpm test:watch` reruns tes
 
 ### Reporting a bad morph
 
-If a morph looks wrong, open an issue with **both path strings** (or SVG files) and what you expected. Every confirmed case becomes a permanent regression fixture.
+If a morph looks wrong, open an issue with **both path strings** (or SVG files) and what you expected. Every confirmed case becomes a permanent regression fixture in [`fixtures/`](fixtures/README.md).
+
+### Changing the morphing algorithm
+
+Run `pnpm filmstrip` before and after your change and compare the pages. Tests check that morphs are exact at both ends; only your eyes can check that the in-between shapes look good.
 
 ## Releases
 
