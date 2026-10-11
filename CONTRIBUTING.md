@@ -81,12 +81,7 @@ Run `pnpm filmstrip` before and after your change and compare the pages. Tests c
 
 ## Releases
 
-Releases are automated with [Changesets](https://github.com/changesets/changesets):
-
-1. Changesets merged into `main` accumulate in a **"chore: version packages"** PR, which the release workflow opens and keeps up to date.
-2. Merging that PR publishes the new versions to npm with provenance, through npm Trusted Publishing (no long-lived tokens), and creates GitHub releases.
-
-Packages stay `"private": true` until they are ready for their first release; private packages are never published.
+Releases are automated with Changesets: merging the "chore: version packages" pull request publishes to npm. Maintainers: see [RELEASING.md](RELEASING.md), including the one-time setup and the current pre-release mode.
 
 ## RFCs
 

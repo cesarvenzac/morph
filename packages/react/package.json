@@ -1,7 +1,6 @@
 {
   "name": "@morphfx/react",
   "version": "0.0.0",
-  "private": true,
   "description": "SVG path morphing for React and Next.js.",
   "keywords": [
     "svg",
@@ -23,7 +22,9 @@
   "type": "module",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -92,5 +93,9 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

@@ -20,7 +20,7 @@
     "filmstrip": "pnpm --filter @morphfx/core build && node scripts/filmstrip.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset publish"
+    "release": "turbo run build --filter=\"./packages/*\" && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
