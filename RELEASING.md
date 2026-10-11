@@ -10,7 +10,9 @@ Releases are automated with [Changesets](https://github.com/changesets/changeset
 
 ## Pre-releases (current mode)
 
-The repository is in Changesets **pre-release mode** with the `next` tag (see `.changeset/pre.json`). Versions are published as `0.1.0-next.0`, `0.1.0-next.1`… under the `next` dist-tag, so `npm install @morphfx/react` doesn't pick them up by accident. Install them with `npm install @morphfx/react@next`.
+The repository is in Changesets **pre-release mode** with the `next` tag (see `.changeset/pre.json`). Versions are published as `0.1.0-next.0`, `0.1.0-next.1`… under the `next` dist-tag. Install them with `npm install @morphfx/react@next`.
+
+The first release, `0.1.0-next.0`, also got the `latest` tag, as a package's first version does. Later pre-releases are published under `next` only, so until the first stable release a plain `npm install @morphfx/react` keeps installing `0.1.0-next.0`.
 
 To publish a stable release, leave pre-release mode in a pull request:
 
@@ -18,14 +20,12 @@ To publish a stable release, leave pre-release mode in a pull request:
 pnpm changeset pre exit
 ```
 
-## One-time setup (before the first release)
+## Publishing setup
 
-npm Trusted Publishing (publishing from GitHub Actions without a long-lived token) can only be configured for a package that already exists, so the first version is published with a short-lived token.
+The workflow has no npm token. `pnpm publish` authenticates with [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers) (OIDC), which also attaches the provenance attestation. This is configured on npmjs.com, in each package's *Settings → Trusted publishing* (all three packages): GitHub Actions, owner `cesarvenzac`, repository `morph`, workflow `release.yml`.
 
-1. **GitHub:** in the repository's *Settings → Actions → General*, enable **Allow GitHub Actions to create and approve pull requests** (the workflow opens the version pull request).
-2. **npm token:** on npmjs.com, create a **granular access token** with *Read and write* permission on the `@morphfx` scope (or the `morphfx` organization), expiring in 7 days. Add it to the repository as an Actions secret named `NPM_TOKEN`.
-3. **Release:** merge into `main`, then merge the "chore: version packages" pull request. The workflow publishes the three packages.
-4. **Trusted Publishing:** on npmjs.com, open each package's *Settings → Trusted publishing* (all three), choose GitHub Actions, and enter owner `cesarvenzac`, repository `morph`, workflow `release.yml`. A new configuration expires after 48 hours unless a publish uses it, so do this shortly before the next release.
-5. **Clean up:** delete the `NPM_TOKEN` secret and revoke the token. Later releases authenticate with Trusted Publishing.
+- **A new configuration expires after 48 hours unless a publish uses it** (once one has, it no longer expires). If the first release after configuring it fails to authenticate, recreate the configuration on each package, then re-run the failed Release workflow.
+- If the repository moves to a GitHub organization, update the configuration and the `repository` field of each `package.json`.
+- The workflow opens the version pull request, which requires **Allow GitHub Actions to create and approve pull requests** in the repository's *Settings → Actions → General*. Workflows don't run on pull requests opened by GitHub Actions, so that pull request shows no CI checks: it only changes versions and changelogs, and the Release workflow builds everything before publishing.
 
-If the repository moves to a GitHub organization, update the Trusted Publishing settings and the `repository` field of each `package.json`.
+The first version, `0.1.0-next.0`, was published with a short-lived token, because Trusted Publishing can only be configured for a package that already exists. It has no provenance attestation.
