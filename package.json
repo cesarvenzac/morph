@@ -9,15 +9,18 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "playground": "pnpm --filter @morphfx/playground dev",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "check:packages": "turbo run check:package",
     "size": "turbo run size",
+    "bench": "pnpm --filter @morphfx/core bench",
+    "filmstrip": "pnpm --filter @morphfx/core build && node scripts/filmstrip.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset publish"
+    "release": "turbo run build --filter=\"./packages/*\" && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

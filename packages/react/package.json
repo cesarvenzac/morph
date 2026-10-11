@@ -1,0 +1,101 @@
+{
+  "name": "@morphfx/react",
+  "version": "0.0.0",
+  "description": "SVG path morphing for React and Next.js.",
+  "keywords": [
+    "svg",
+    "morph",
+    "morphing",
+    "path",
+    "animation",
+    "react",
+    "nextjs"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cesarvenzac/morph.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://github.com/cesarvenzac/morph#readme",
+  "bugs": "https://github.com/cesarvenzac/morph/issues",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check:package": "publint --strict && attw --pack . --profile node16 && node ../../scripts/check-use-client.mjs dist/index.js dist/index.cjs",
+    "size": "size-limit"
+  },
+  "size-limit": [
+    {
+      "name": "@morphfx/react (without core and React)",
+      "path": "dist/index.js",
+      "ignore": [
+        "react",
+        "react-dom",
+        "@morphfx/core"
+      ],
+      "limit": "2 kB"
+    },
+    {
+      "name": "<MorphPath> with @morphfx/core (without React)",
+      "path": "dist/index.js",
+      "import": "{ MorphPath }",
+      "ignore": [
+        "react",
+        "react-dom"
+      ],
+      "limit": "9 kB"
+    }
+  ],
+  "dependencies": {
+    "@morphfx/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@size-limit/preset-small-lib": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "jsdom": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "size-limit": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -4,9 +4,13 @@ node_modules/
 # Build output
 dist/
 *.tsbuildinfo
+.next/
+next-env.d.ts
+.expo/
 
 # Tooling caches
 .turbo/
+.filmstrip/
 coverage/
 .vitest-attachments/
 

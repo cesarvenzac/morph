@@ -24,11 +24,19 @@ pnpm test
 ```
 packages/
   core/          @morphfx/core: framework-agnostic geometry engine (zero dependencies)
+  react/         @morphfx/react: <MorphPath> and useMorph for React and Next.js
+  react-native/  @morphfx/react-native: <MorphPath> for react-native-svg + Reanimated, useMorphPath for Skia
+apps/
+  playground/    interactive playground (pnpm playground), uses the packages' source directly
+  next-example/  Next.js App Router app using @morphfx/react
+  expo-example/  Expo app (iOS, Android, web) using @morphfx/react-native
+fixtures/        shapes and morph pairs shared by the test suites
+scripts/         development tools (filmstrip renderer, build checks)
 docs/rfcs/       design decisions
 .changeset/      pending release notes
 ```
 
-The React, React Native and docs packages will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses.
+The docs site will be added as the [roadmap](docs/rfcs/0001-project-foundations.md#12-roadmap) progresses. To try changes in a real app, build the packages (`pnpm build`), then run `pnpm --filter @morphfx/next-example dev` or `pnpm --filter @morphfx/expo-example start`.
 
 ## Scripts
 
@@ -42,6 +50,9 @@ Run from the repository root:
 | `pnpm lint` / `pnpm lint:fix` | Lints and checks formatting (Biome) / fixes what can be fixed |
 | `pnpm check:packages` | Validates published package shape (publint, Are The Types Wrong) |
 | `pnpm size` | Checks bundle size budgets (size-limit) |
+| `pnpm bench` | Runs the performance benchmarks of `@morphfx/core` |
+| `pnpm playground` | Starts the interactive playground, with live reload of the packages' source |
+| `pnpm filmstrip` | Renders every fixture morph into `.filmstrip/index.html` to review quality by eye |
 | `pnpm changeset` | Adds a changeset describing your change |
 
 Inside a package, `pnpm dev` rebuilds on change and `pnpm test:watch` reruns tests.
@@ -64,16 +75,20 @@ Inside a package, `pnpm dev` rebuilds on change and `pnpm test:watch` reruns tes
 
 ### Reporting a bad morph
 
-If a morph looks wrong, open an issue with **both path strings** (or SVG files) and what you expected. Every confirmed case becomes a permanent regression fixture.
+If a morph looks wrong, open an issue with **both path strings** (or SVG files) and what you expected. Every confirmed case becomes a permanent regression fixture in [`fixtures/`](fixtures/README.md).
+
+### Rules for `@morphfx/react-native`
+
+- Code that runs on the UI thread is a **worklet**: start it with a `'worklet'` directive, keep it self-contained, and only use plain data from the JS thread.
+- The Reanimated Babel plugin turns worklets into constants, which are not hoisted: **define each worklet before the worklets that call it**. `pnpm check:packages` compiles the built package with the plugin and fails if a worklet is used before it is defined.
+
+### Changing the morphing algorithm
+
+Run `pnpm filmstrip` before and after your change and compare the pages. Tests check that morphs are exact at both ends; only your eyes can check that the in-between shapes look good.
 
 ## Releases
 
-Releases are automated with [Changesets](https://github.com/changesets/changesets):
-
-1. Changesets merged into `main` accumulate in a **"chore: version packages"** PR, which the release workflow opens and keeps up to date.
-2. Merging that PR publishes the new versions to npm with provenance, through npm Trusted Publishing (no long-lived tokens), and creates GitHub releases.
-
-Packages stay `"private": true` until they are ready for their first release; private packages are never published.
+Releases are automated with Changesets: merging the "chore: version packages" pull request publishes to npm. Maintainers: see [RELEASING.md](RELEASING.md), including the one-time setup and the current pre-release mode.
 
 ## RFCs
 

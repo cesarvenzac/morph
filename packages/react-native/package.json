@@ -1,0 +1,137 @@
+{
+  "name": "@morphfx/react-native",
+  "version": "0.0.0",
+  "description": "SVG path morphing for React Native and Expo, on the UI thread with react-native-svg and Reanimated, or with Skia.",
+  "keywords": [
+    "svg",
+    "morph",
+    "morphing",
+    "path",
+    "animation",
+    "react-native",
+    "expo",
+    "reanimated",
+    "skia"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cesarvenzac/morph.git",
+    "directory": "packages/react-native"
+  },
+  "homepage": "https://github.com/cesarvenzac/morph#readme",
+  "bugs": "https://github.com/cesarvenzac/morph/issues",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "react-native": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./skia": {
+      "react-native": {
+        "types": "./dist/skia.d.ts",
+        "default": "./dist/skia.js"
+      },
+      "import": {
+        "types": "./dist/skia.d.ts",
+        "default": "./dist/skia.js"
+      },
+      "require": {
+        "types": "./dist/skia.d.cts",
+        "default": "./dist/skia.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "check:package": "publint --strict && attw --pack . --profile node16 && node ../../scripts/check-worklets.mjs 'dist/frame-*.js=3' dist/index.js=3 dist/skia.js=2",
+    "size": "size-limit"
+  },
+  "dependencies": {
+    "@morphfx/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "@shopify/react-native-skia": ">=2.0.0",
+    "react": ">=19.0.0",
+    "react-native": ">=0.79.0",
+    "react-native-reanimated": ">=4.0.0",
+    "react-native-svg": ">=15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@shopify/react-native-skia": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@shopify/react-native-skia": "catalog:expo",
+    "@size-limit/preset-small-lib": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "fast-check": "catalog:",
+    "publint": "catalog:",
+    "react": "catalog:expo",
+    "react-native": "catalog:expo",
+    "react-native-reanimated": "catalog:expo",
+    "react-native-svg": "catalog:expo",
+    "react-native-worklets": "catalog:expo",
+    "size-limit": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "size-limit": [
+    {
+      "name": "@morphfx/react-native (without core and peers)",
+      "path": "dist/index.js",
+      "ignore": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-svg",
+        "@morphfx/core"
+      ],
+      "limit": "2 kB"
+    },
+    {
+      "name": "@morphfx/react-native/skia (without core and peers)",
+      "path": "dist/skia.js",
+      "ignore": [
+        "react",
+        "react-native",
+        "react-native-reanimated",
+        "@shopify/react-native-skia",
+        "@morphfx/core"
+      ],
+      "limit": "1.5 kB"
+    }
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

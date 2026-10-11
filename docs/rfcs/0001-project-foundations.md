@@ -34,7 +34,7 @@ The idea is appealing: one fast engine that could be reused outside JavaScript l
 - **The built-in driver** (tween and spring) does a few multiplications per frame. Crossing into WebAssembly or a native module costs more than the arithmetic it would replace.
 - **Per-frame interpolation** is one loop over a few hundred to a few thousand numbers, which JS engines compile to fast machine code. Most of the per-frame cost comes *after* it: building the `d` string, then the browser or native side re-parsing and rasterizing the path. A Rust version would also have to hand a string back across the WebAssembly boundary every frame, which adds copying and text decoding.
 - **On React Native**, Hermes gained WebAssembly support in 2026, but as an early preview that isn't production-ready. It also translates WebAssembly into the same bytecode as JavaScript and runs it on the same interpreter, so it brings no speedup. Real native speed would need a native module (for example through uniffi-bindgen-react-native or Nitro Modules). That breaks Expo Go, adds iOS and Android build steps for every user, and is awkward to call from Reanimated worklets on the UI thread.
-- **On the web**, WebAssembly adds asynchronous initialization, bundler configuration, SSR/edge caveats and tens of kilobytes, against a 5 kB budget for the whole core.
+- **On the web**, WebAssembly adds asynchronous initialization, bundler configuration, SSR/edge caveats and tens of kilobytes, against a 6 kB budget for the whole core.
 - **Where Rust could genuinely help:** `prepare()` on very large paths (thousands of segments, such as maps or detailed illustrations). That is a one-off cost per morph, not a per-frame one.
 
 **Decision:** keep TypeScript and keep the door open:
@@ -147,8 +147,8 @@ flowchart LR
     A[input<br/>d strings, shapes] --> B[parse]
     B --> C[normalize<br/>absolute, all cubic]
     C --> D[match subpaths]
-    D --> E[equalize<br/>segment counts]
-    E --> F[align<br/>start point, direction]
+    D --> E[normalize<br/>winding]
+    E --> F[correspond<br/>by arc length]
   end
   F --> P[(PreparedMorph<br/>flat number arrays<br/>JSON-serializable)]
   subgraph perframe["every frame: cheap, any thread"]
@@ -171,9 +171,11 @@ flowchart LR
    - `Z` becomes an explicit closing segment when the end point differs from the start.
 
    The result is one uniform representation: subpaths made of `start + N cubics + closed flag`.
-4. **Match subpaths.** When the subpath counts differ (an "i" has 2 subpaths, an "o" has 2 including a hole, an "8" has 3), pair subpaths by a cost made of centroid distance, area and bounding box. Use the Hungarian algorithm for small counts and a greedy pass for large ones. Unmatched subpaths **grow from**, or **collapse into**, a point (the partner's centroid or its nearest point). A flubber-like "split one into many" strategy can come later as an option.
-5. **Equalize.** Subdivide segments with de Casteljau until both subpaths have the same segment count. Split the longest segments first so points stay evenly distributed.
-6. **Align (point correspondence).** First normalize winding on both sides (outer contours one direction, holes the other), so `fill-rule` stays correct at every `t`. Then, for closed subpaths, choose the starting offset that **minimizes the total squared distance** between corresponding points. This is O(n²) and n is small; FFT cross-correlation is possible if it ever matters. Open subpaths have a fixed start, so they only try reversal.
+4. **Match subpaths.** When the subpath counts differ (an "i" has 2 subpaths, an "o" has 2 including a hole, an "8" has 3), pair subpaths by a cost made of centroid distance and size. Each closed subpath is first classified as an outer contour or a hole by its nesting depth, and only same-kind subpaths are paired (open subpaths can pair with anything). Use the Hungarian algorithm for small counts and a greedy pass for large ones. Unmatched subpaths **grow from**, or **collapse into**, their own centroid. A flubber-like "split one into many" strategy can come later as an option.
+5. **Normalize winding.** Give every closed subpath a canonical direction (outer contours one way, holes the other), so paired subpaths never turn inside out and `fill-rule` stays correct at every `t`.
+6. **Correspond by arc length.** Points are paired by *relative arc length*: the point at 30% of one outline's length moves to the point at 30% of the other's. For closed subpaths, the start of one outline is shifted continuously to the position that **minimizes the total squared distance** between evenly spaced samples of both outlines (O(n²) over at most 1,024 samples). Open subpaths keep their start but may be reversed. Then each outline is split (exactly, with de Casteljau) at the other's anchor positions, and anchors that nearly coincide are paired instead of split. Both sides end up with the same segment count, and the corners of both shapes keep a counterpart. For example, the top of a circle moves to the middle of a square's top edge, and its diagonals move to the corners.
+
+   *Implementation note:* a first version only rotated subpaths between existing anchors after splitting the longest segments. That mapped a circle's four anchors onto a square's four corners, making the shape spin 45° while morphing. Arc-length correspondence fixed it.
 7. **Interpolate (per frame).** Lerp every control point: one loop over a flat array. Possible later options: *rotational* interpolation around centroids (avoids the "shrink in the middle" effect when a shape rotates) and area-preserving correction.
 8. **Output.**
    - a `d` string with configurable precision (precision drives string size and per-frame cost);
@@ -401,11 +403,11 @@ flowchart TB
 
 ### Spikes to run before committing to the design
 
-1. The `'worklet'` directive survives our tsdown build, and Reanimated workletizes core functions loaded from `node_modules`.
-2. `'use client'` is preserved by the build (Rolldown), or we need a plugin.
+1. The `'worklet'` directive survives our tsdown build, and Reanimated workletizes core functions loaded from `node_modules`. *Resolved: directives survive, and the Expo Android bundle contains our frame functions as worklets. The per-frame worklets live in `@morphfx/react-native` rather than in the core, so the core stays free of Reanimated concerns. `check:package` runs the plugin over the build to catch worklets used before they are defined.*
+2. `'use client'` is preserved by the build (Rolldown), or we need a plugin. *Resolved: Rolldown keeps it at the top of both the ESM and CJS output, and `check:package` verifies it.*
 3. Per-frame cost on a **low-end Android** device for 50 / 500 / 5,000-segment paths: `react-native-svg` (string `d`) vs Skia (native interpolation).
-4. The Expo example app works inside a pnpm monorepo with isolated installs (Expo supports this since SDK 54; fallback is `node-linker=hoisted`).
-5. How a `PreparedMorph` is transferred to the UI runtime: plain arrays vs typed arrays.
+4. The Expo example app works inside a pnpm monorepo with isolated installs (Expo supports this since SDK 54; fallback is `node-linker=hoisted`). *Resolved: works with isolated installs and no Metro configuration.*
+5. How a `PreparedMorph` is transferred to the UI runtime: plain arrays vs typed arrays. *Plain arrays for now, held in a shared value.*
 
 ---
 
@@ -456,7 +458,7 @@ Latest versions on npm as of 2026-10-11: React 19.3, Next.js 16.4, Expo SDK 57 /
 
 | Budget | Target |
 |---|---|
-| `@morphfx/core` | ≤ 5 kB min+gzip |
+| `@morphfx/core` | ≤ 6 kB min+brotli (calibrated from 5 kB once the full engine existed: 5.3 kB with parser, arcs, subpath matching and arc-length correspondence) |
 | `@morphfx/react` (on top of core) | ≤ 2 kB |
 | `@morphfx/react-native` (on top of core) | ≤ 2 kB |
 | `prepare()` for two icons (≤ 50 segments each) | < 1 ms on a mid-range laptop |
@@ -594,10 +596,10 @@ Still to do:
 
 | Phase | Content | Exit criteria |
 |---|---|---|
-| **0. Foundations** (~1 week) | Settle §13; claim the npm scope, GitHub org and domain; scaffold the monorepo, tooling, CI and governance files; seed the fixture corpus (~50 pairs). *Scaffolding is done (plus the parser and normalizer that start Phase 1); the fixture corpus and the npm org, domain and GitHub org remain* | `pnpm i && pnpm build && pnpm test` passes in CI |
-| **1. Core engine** | Parser, normalize, equalize, align, interpolate, serialize. Single subpath first, then multiple subpaths and holes. Property tests, filmstrips, benchmarks vs flubber | Better than flubber on our quality metrics for the corpus; `0.1.0` of core on the `next` tag |
-| **2. React bindings** | `<MorphPath>`, `useMorph`, built-in tween/spring driver (interruptible), Motion `mixer`, SSR, reduced motion, debug overlay | Used in one of our own Next.js projects |
-| **3. React Native** | `react-native-svg` + Reanimated binding, Skia subpath, Expo example app, on-device performance checks | 60 fps for icon morphs on a low-end Android device |
+| **0. Foundations** (~1 week) | Settle §13; claim the npm scope, GitHub org and domain; scaffold the monorepo, tooling, CI and governance files; seed the fixture corpus (~50 pairs). *Done, except the domain and GitHub org (optional). The corpus started with 28 shapes and 27 pairs* | `pnpm i && pnpm build && pnpm test` passes in CI |
+| **1. Core engine** | Parser, normalize, equalize, align, interpolate, serialize. Single subpath first, then multiple subpaths and holes. Property tests, filmstrips, benchmarks vs flubber. *In progress: `morph()`, `prepare()`, `interpolate()` and `mixer()` work, including multiple subpaths and holes, with property tests, a filmstrip page and benchmarks. Remaining: quality metrics, the comparison with flubber, rotation-aware interpolation (plus → ×), splitting one shape into several (play → pause), and faster string output for very large paths* | Better than flubber on our quality metrics for the corpus; `0.1.0` of core on the `next` tag |
+| **2. React bindings** | `<MorphPath>`, `useMorph`, built-in tween/spring driver (interruptible), Motion `mixer`, SSR, reduced motion, debug overlay. *In progress: `<MorphPath>` (animated and controlled modes), `useMorph`, `@morphfx/core/animate` and a Next.js example app work and are tested. Remaining: the debug overlay, and use in one of our projects* | Used in one of our own Next.js projects |
+| **3. React Native** | `react-native-svg` + Reanimated binding, Skia subpath, Expo example app, on-device performance checks. *In progress: `<MorphPath>` (animated and controlled) and `useMorphPath` (Skia) work; the Expo example runs on web and its Android bundle builds with our frames compiled to worklets; Skia interpolation is tested against real Skia (CanvasKit). Remaining: runs on physical iOS and Android devices, performance checks* | 60 fps for icon morphs on a low-end Android device |
 | **4. Docs and launch** | Docs site, playground, gallery, comparison page. Public **0.x** launch (Show HN, r/reactjs, r/reactnative, This Week in React, X/Bluesky) | Docs cover every public API |
 | **5. Advanced SVG** | Multi-element icon morphs (icon-set data such as Lucide), SMIL / RSC zero-JS output, CLI / build-time `prepare`, rotational interpolation, fill and stroke color interpolation | — |
 | **Later** | Vue / Svelte / Solid / web component; text morphing; image morphing; UI morphing (each through its own RFC) | — |

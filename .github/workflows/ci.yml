@@ -12,6 +12,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+  EXPO_NO_TELEMETRY: 1
+
 jobs:
   check:
     name: Lint, typecheck, test, build

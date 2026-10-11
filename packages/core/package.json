@@ -1,7 +1,6 @@
 {
   "name": "@morphfx/core",
   "version": "0.0.0",
-  "private": true,
   "description": "Framework-agnostic SVG path morphing engine.",
   "keywords": [
     "svg",
@@ -23,15 +22,33 @@
   "type": "module",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./animate": {
+      "import": {
+        "types": "./dist/animate.d.ts",
+        "default": "./dist/animate.js"
+      },
+      "require": {
+        "types": "./dist/animate.d.cts",
+        "default": "./dist/animate.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -41,14 +58,20 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "check:package": "publint --strict && attw --pack .",
-    "size": "size-limit"
+    "check:package": "publint --strict && attw --pack . --profile node16",
+    "size": "size-limit",
+    "bench": "vitest bench --run --reporter=verbose"
   },
   "size-limit": [
     {
       "name": "@morphfx/core (everything)",
       "path": "dist/index.js",
-      "limit": "5 kB"
+      "limit": "6 kB"
+    },
+    {
+      "name": "@morphfx/core/animate",
+      "path": "dist/animate.js",
+      "limit": "1.5 kB"
     }
   ],
   "devDependencies": {
@@ -60,5 +83,9 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

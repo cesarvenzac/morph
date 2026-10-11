@@ -10,11 +10,20 @@ An open-source morphing engine and set of bindings:
 
 | Package | What it is | Status |
 |---|---|---|
-| [`@morphfx/core`](packages/core) | Framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth | Parser and normalizer done; morphing in progress |
-| `@morphfx/react` | `<MorphPath d={…} />` for React and Next.js: animates whenever `d` changes, SSR-friendly, honors reduced motion | Planned |
-| `@morphfx/react-native` | The same API for React Native and Expo, running on the UI thread with `react-native-svg` + Reanimated, or with Skia (`/skia`) | Planned |
+| [`@morphfx/core`](packages/core) | Framework-agnostic, zero-dependency TypeScript engine that morphs between *arbitrary* SVG paths (different point counts, multiple subpaths, holes) while keeping curves smooth, plus tween and spring timing (`@morphfx/core/animate`) | Works and is tested; not published yet |
+| [`@morphfx/react`](packages/react) | `<MorphPath d={…} />` for React and Next.js: animates whenever `d` changes, interruptible, server-rendered, honors reduced motion | Works and is tested; not published yet |
+| [`@morphfx/react-native`](packages/react-native) | The same API for React Native and Expo, running on the UI thread with `react-native-svg` + Reanimated, or with Skia (`/skia`) | Works on Expo web and builds for Android; not yet tried on a device |
 
 Bring your own animation library (Motion, Reanimated, GSAP, react-spring), or use the small built-in driver. Text, image and UI morphing may come later.
+
+## Try it
+
+```sh
+pnpm install
+pnpm playground
+```
+
+The [playground](apps/playground) lets you morph between shapes, interrupt morphs, tune springs, paste your own SVG paths and inspect how points pair up. There are also a [Next.js example](apps/next-example) and an [Expo example](apps/expo-example) (iOS, Android and web).
 
 ## Design
 

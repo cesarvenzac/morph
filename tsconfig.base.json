@@ -6,6 +6,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "types": [],
 
     "strict": true,
