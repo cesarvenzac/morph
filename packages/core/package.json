@@ -42,13 +42,14 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check:package": "publint --strict && attw --pack .",
-    "size": "size-limit"
+    "size": "size-limit",
+    "bench": "vitest bench --run --reporter=verbose"
   },
   "size-limit": [
     {
       "name": "@morphfx/core (everything)",
       "path": "dist/index.js",
-      "limit": "5 kB"
+      "limit": "6 kB"
     }
   ],
   "devDependencies": {

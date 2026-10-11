@@ -1,3 +1,4 @@
+import { DEFAULT_PRECISION, formatNumber } from './format'
 import type { CubicPath } from './normalize'
 
 export interface SerializeOptions {
@@ -14,22 +15,17 @@ export interface SerializeOptions {
  * Numbers are rounded to `precision` decimals with trailing zeros removed.
  */
 export function serialize(path: CubicPath, options: SerializeOptions = {}): string {
-  const factor = 10 ** (options.precision ?? 3)
+  const factor = 10 ** (options.precision ?? DEFAULT_PRECISION)
   let d = ''
 
   for (const { points, closed } of path) {
-    d += `M${format(points[0], factor)} ${format(points[1], factor)}`
+    d += `M${formatNumber(points[0], factor)} ${formatNumber(points[1], factor)}`
     if (points.length > 2) d += 'C'
     for (let i = 2; i < points.length; i++) {
-      d += `${i > 2 ? ' ' : ''}${format(points[i], factor)}`
+      d += `${i > 2 ? ' ' : ''}${formatNumber(points[i], factor)}`
     }
     if (closed) d += 'Z'
   }
 
   return d
-}
-
-function format(value: number, factor: number): string {
-  // `+ 0` turns -0 into 0 so the output never contains "-0".
-  return String(Math.round(value * factor) / factor + 0)
 }
