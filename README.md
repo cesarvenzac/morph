@@ -119,6 +119,20 @@ A shape's nodes back as path data: for drawing anchors and handles, or a frame f
 Building a morph is the costly part, about 15 ms for a pair of Lucide icons (once, so keep the
 morph, not the icons); a frame is then about 0.2 ms. Measured in Node on a laptop.
 
+## Development
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run check # packed as npm publishes it, then installed and run as a user's would be
+```
+
+This repository is a copy. The package is developed inside the site it was made for, whose
+repository is private, and every release copies it here, history and all, and publishes it to
+npm from here, with provenance. Issues are welcome; pull requests are read, and their changes
+made at the source.
+
 ## Licence
 
 MIT. The examples use [Lucide](https://lucide.dev)'s icons (ISC).

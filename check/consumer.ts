@@ -1,5 +1,5 @@
 // The package as someone installing it uses it: typechecked against its published types (as
-// NodeNext and as a bundler resolves them) and run, by scripts/check-package.sh.
+// NodeNext and as a bundler resolves them) and run, by check/run.sh.
 import { EVENLY, morph, nodesData, type Icon, type Stroke } from "@cesarvenzac/morph";
 
 // Lucide's icons as its own types have them (lucide's IconNode: numbers allowed, keys too).
