@@ -1,21 +1,22 @@
-# Publishes to npm when a version's tag arrives (v0.1.1, whose package.json must say 0.1.1),
-# through npm's trusted publishing: npm trusts this workflow in this repository, so there's no
-# token, and every release says where and how it was built (provenance). npm only trusts a
-# workflow for a package that exists, so the first version is published with a short-lived
-# token, kept as the NPM_TOKEN secret until then. A tag whose version is already on npm is
-# checked and left as it is.
+# Publishes to npm when main carries a version that isn't there yet (a release is a version
+# bump), then tags it v<version>. Through npm's trusted publishing: npm trusts this workflow in
+# this repository, so there's no token, and every release says where and how it was built
+# (provenance). npm only trusts a workflow for a package that exists, so the first version is
+# published with a short-lived token, the NPM_TOKEN secret, and waits for it. It can be run by
+# hand too, say once that token is in place.
 name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
@@ -31,23 +32,38 @@ jobs:
           registry-url: https://registry.npmjs.org
       # Trusted publishing needs npm 11.5.1 or later, whatever Node bundles.
       - run: npm install --global npm@11
-      - name: The tag names the package's version
+      - name: Is this version on npm yet?
         id: release
+        env:
+          HAS_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
           name=$(node -p "require('./package.json').name")
-          stated=$(node -p "require('./package.json').version")
-          [ "$stated" = "$version" ] || { echo "::error::package.json says $stated, the tag $version"; exit 1; }
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           if [ "$(npm view "$name@$version" version 2>/dev/null)" = "$version" ]; then
-            echo "::notice::$name@$version is already on npm"
-            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$name@$version is on npm already"
+          elif ! npm view "$name" name >/dev/null 2>&1 && [ "$HAS_TOKEN" != true ]; then
+            echo "::notice::$name's first version waits for the NPM_TOKEN secret"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run check
-      - if: steps.release.outputs.published != 'true'
+      - if: steps.release.outputs.publish == 'true'
+        run: npm ci
+      - if: steps.release.outputs.publish == 'true'
+        run: npm run typecheck
+      - if: steps.release.outputs.publish == 'true'
+        run: npm test
+      - if: steps.release.outputs.publish == 'true'
+        run: npm run check
+      - if: steps.release.outputs.publish == 'true'
         run: npm publish --provenance
         env:
           # The first version's token, while there is one; otherwise setup-node's own placeholder.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || env.NODE_AUTH_TOKEN }}
+      - if: steps.release.outputs.publish == 'true'
+        name: Tag the version
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
