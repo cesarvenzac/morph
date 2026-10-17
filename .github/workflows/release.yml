@@ -1,7 +1,8 @@
 # Publishes to npm when a version's tag arrives (v0.1.1, whose package.json must say 0.1.1),
 # through npm's trusted publishing: npm trusts this workflow in this repository, so there's no
-# token anywhere, and every release says where and how it was built (provenance). The first
-# version was published by hand, as npm requires, so a tag whose version is already on npm is
+# token, and every release says where and how it was built (provenance). npm only trusts a
+# workflow for a package that exists, so the first version is published with a short-lived
+# token, kept as the NPM_TOKEN secret until then. A tag whose version is already on npm is
 # checked and left as it is.
 name: Release
 
@@ -47,3 +48,6 @@ jobs:
       - run: npm run check
       - if: steps.release.outputs.published != 'true'
         run: npm publish --provenance
+        env:
+          # The first version's token, while there is one; otherwise setup-node's own placeholder.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || env.NODE_AUTH_TOKEN }}
