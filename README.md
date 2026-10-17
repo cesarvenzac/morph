@@ -129,8 +129,8 @@ npm run check # packed as npm publishes it, then installed and run as a user's w
 ```
 
 This repository is a copy. The package is developed inside the site it was made for, whose
-repository is private, and every release copies it here, history and all, and publishes it to
-npm from here, with provenance. Issues are welcome; pull requests are read, and their changes
+repository is private, and every release copies it here and publishes it to npm from here, with
+provenance. Issues are welcome; pull requests are read, and their changes
 made at the source.
 
 ## Licence
