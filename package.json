@@ -1,6 +1,6 @@
 {
   "name": "@cesarvenzac/morph",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Morph one stroked icon into another without the spikes: strokes paired by their shape, moved whole, rounded halfway and drawn as smooth curves.",
   "keywords": ["svg", "morph", "icon", "icons", "path", "animation", "interpolation", "lucide"],
   "homepage": "https://cesarvenzac.com/lab/icon-morphs",
