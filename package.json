@@ -1,0 +1,32 @@
+{
+  "name": "@cesarvenzac/morph",
+  "version": "0.1.0",
+  "description": "Morph one stroked icon into another without the spikes: strokes paired by their shape, moved whole, rounded halfway and drawn as smooth curves.",
+  "keywords": ["svg", "morph", "icon", "icons", "path", "animation", "interpolation", "lucide"],
+  "homepage": "https://cesarvenzac.com/lab/icon-morphs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cesarvenzac/portfolio.git",
+    "directory": "packages/morph"
+  },
+  "bugs": "https://github.com/cesarvenzac/portfolio/issues",
+  "author": "César Venzac (https://cesarvenzac.com)",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
