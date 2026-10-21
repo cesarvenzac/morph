@@ -204,12 +204,11 @@ export function nodesThrough(frame: Frame, closed: boolean, anchors: number[]): 
   return nodes;
 }
 
-const round = (value: number) => Number(value.toFixed(3)).toString();
-const text = (p: Vec) => `${round(p[0])} ${round(p[1])}`;
-
-/** Nodes as SVG path data: a cubic where either side has a handle, a line where neither does. */
-export function nodesData(nodes: Node[], closed: boolean) {
+/** Nodes as SVG path data, `digits` decimals a number: a cubic where either side has a handle, a line where neither does. */
+export function nodesData(nodes: Node[], closed: boolean, digits = 3) {
   if (!nodes.length) return "";
+  const round = (value: number) => Number(value.toFixed(digits)).toString();
+  const text = (p: Vec) => `${round(p[0])} ${round(p[1])}`;
   let d = `M${text(nodes[0].at)}`;
   const segments = closed ? nodes.length : nodes.length - 1;
   for (let k = 0; k < segments; k++) {

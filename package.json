@@ -1,9 +1,30 @@
 {
   "name": "@cesarvenzac/morph",
-  "version": "0.1.1",
-  "description": "Morph one stroked icon into another without the spikes: strokes paired by their shape, moved whole, rounded halfway and drawn as smooth curves.",
-  "keywords": ["svg", "morph", "icon", "icons", "path", "animation", "interpolation", "lucide"],
-  "homepage": "https://cesarvenzac.com/lab/icon-morphs",
+  "version": "1.0.0",
+  "description": "Morph any SVG into another without the spikes: icons, filled shapes and words, one shape into several, paired by their shape, moved whole and drawn as smooth curves.",
+  "keywords": [
+    "svg",
+    "morph",
+    "morphing",
+    "svg-morphing",
+    "shape-morphing",
+    "shape",
+    "path",
+    "icon",
+    "icons",
+    "icon-animation",
+    "text",
+    "font",
+    "opentype",
+    "animation",
+    "interpolation",
+    "tween",
+    "spring",
+    "react",
+    "flubber",
+    "lucide"
+  ],
+  "homepage": "https://cesarvenzac.com/morph",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cesarvenzac/morph.git"
@@ -18,9 +39,19 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./dom": {
+      "types": "./dist/dom.d.ts",
+      "default": "./dist/dom.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
@@ -28,7 +59,21 @@
     "check": "sh check/run.sh",
     "prepublishOnly": "npm run build"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/opentype.js": "^1.3.10",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "opentype.js": "^2.0.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "typescript": "^5.9.3",
     "vitest": "^5.0.3"
   },

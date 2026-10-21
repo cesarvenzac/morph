@@ -3,7 +3,9 @@
   // they are. Tests, their icons and the site's internals stay out.
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    // The DOM's types for the dom and react entries; the main one uses none of it, and runs anywhere.
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": "src",
@@ -16,5 +18,5 @@
     "types": []
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.fixture.ts", "src/internal.ts"]
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.fixture.ts", "src/internal.ts"]
 }

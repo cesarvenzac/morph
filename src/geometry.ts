@@ -475,3 +475,110 @@ export function resample(o: Outline, count: number): Outline {
   }
   return { points: sampled, closed, corners };
 }
+
+/* ----------------------------------------------------------------------------
+ * Areas, insides and pieces of outlines
+ * ------------------------------------------------------------------------- */
+
+/** The area a closed polygon encloses, signed by the way it runs: positive clockwise on screen (y down). */
+export function signedArea(points: Vec[]) {
+  let area = 0;
+  for (let k = 0; k < points.length; k++) {
+    const [x0, y0] = points[k];
+    const [x1, y1] = points[(k + 1) % points.length];
+    area += x0 * y1 - x1 * y0;
+  }
+  return area / 2;
+}
+
+/** Whether a point is inside a polygon (crossings counted, even-odd). */
+export function inside([x, y]: Vec, polygon: Vec[]) {
+  let within = false;
+  for (let k = 0, j = polygon.length - 1; k < polygon.length; j = k++) {
+    const [xk, yk] = polygon[k];
+    const [xj, yj] = polygon[j];
+    if (yk > y !== yj > y && x < ((xj - xk) * (y - yk)) / (yj - yk) + xk) within = !within;
+  }
+  return within;
+}
+
+/** How far along an outline the point nearest `p` is, as a length from its first point. */
+export function nearestAlong({ points, closed }: Outline, p: Vec) {
+  let best = Infinity;
+  let at = 0;
+  let along = 0;
+  const count = closed ? points.length : points.length - 1;
+  for (let k = 0; k < count; k++) {
+    const a = points[k];
+    const b = points[(k + 1) % points.length];
+    const span = distance(a, b);
+    const u = span < 1e-12 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * (b[0] - a[0]) + (p[1] - a[1]) * (b[1] - a[1])) / (span * span)));
+    const d = distance(p, lerp(a, b, u));
+    if (d < best) {
+      best = d;
+      at = along + u * span;
+    }
+    along += span;
+  }
+  return points.length === 1 ? 0 : at;
+}
+
+/**
+ * The stretch of an outline from length `from` to length `to` along it, as an open subpath of
+ * lines: every point between, and the ends where they fall. A closed outline goes round past
+ * its first point when `to` is past its length.
+ */
+export function stretchOf(o: Outline, from: number, to: number): Subpath {
+  const { points, closed } = o;
+  const total = outlineLength(o);
+  const n = points.length;
+  const at = [0];
+  for (let k = 1; k < n; k++) at.push(at[k - 1] + distance(points[k - 1], points[k]));
+  // The point at length s, and which piece it's on, for a length anywhere on the outline (round again if closed).
+  const pointAt = (s: number): Vec => {
+    if (closed) s = ((s % total) + total) % total;
+    else s = Math.max(0, Math.min(total, s));
+    if (closed && s >= at[n - 1]) return lerp(points[n - 1], points[0], (s - at[n - 1]) / (total - at[n - 1] || 1));
+    let k = 1;
+    while (k < n - 1 && at[k] < s) k++;
+    return lerp(points[k - 1], points[k], (s - at[k - 1]) / (at[k] - at[k - 1] || 1));
+  };
+  const start = pointAt(from);
+  const segments: Segment[] = [];
+  // Every point of the outline strictly between the two lengths, once round at most.
+  const rounds = closed ? [0, total] : [0];
+  for (const round of rounds) {
+    for (let k = 0; k < n; k++) {
+      const s = at[k] + round;
+      if (s > from + 1e-9 && s < to - 1e-9) segments.push({ kind: "line", to: points[k] });
+    }
+  }
+  segments.push({ kind: "line", to: pointAt(to) });
+  return { start, segments, closed: false };
+}
+
+/** `count` points evenly spaced along an outline by length: the middles of `count` equal stretches. */
+export function pointsAlong(o: Outline, count: number): Vec[] {
+  const total = outlineLength(o);
+  const { points, closed } = o;
+  const n = points.length;
+  if (n === 1 || total < 1e-12) return Array.from({ length: count }, () => points[0]);
+  const out: Vec[] = [];
+  let k = 0;
+  let before = 0;
+  for (let i = 0; i < count; i++) {
+    const s = ((i + 0.5) * total) / count;
+    // Walk on to the piece that holds s (round to the first point again, when closed).
+    while (true) {
+      const next = k + 1 < n ? points[k + 1] : closed ? points[0] : points[k];
+      const span = distance(points[k], next);
+      if (before + span >= s || k + 1 >= (closed ? n : n - 1)) {
+        out.push(lerp(points[k], next, span < 1e-12 ? 0 : Math.min(1, (s - before) / span)));
+        break;
+      }
+      before += span;
+      k++;
+    }
+  }
+  return out;
+}
