@@ -7,9 +7,10 @@ set -eu
 package=$(cd "$(dirname "$0")/.." && pwd)
 # The package's own TypeScript, or the one above it when it's developed inside the site.
 tsc=$(cd "$package" && node -p 'require.resolve("typescript/bin/tsc")')
-# React for the react entry, and opentype.js for a real font, the versions the package is developed
-# against (in npm's cache since its install).
-react=$(cd "$package" && node -p 'const d = require("./package.json").devDependencies; ["react", "react-dom", "@types/react", "@types/react-dom", "opentype.js", "@types/opentype.js"].map((name) => name + "@" + d[name]).join(" ")')
+# React for the react entry, and opentype.js for a real font, at the versions the package is
+# developed against (its lockfile's). From npm's cache when it has them, else the registry: a
+# fresh cache, as CI's is, holds the lockfile's tarballs but nothing to resolve a version by.
+react=$(cd "$package" && node -p 'const lock = require("./package-lock.json").packages; ["react", "react-dom", "@types/react", "@types/react-dom", "opentype.js", "@types/opentype.js"].map((name) => name + "@" + lock["node_modules/" + name].version).join(" ")')
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
@@ -25,5 +26,5 @@ for resolution in NodeNext bundler; do
   printf '{"type":"module","private":true}\n' > "$project/package.json"
   printf '{"compilerOptions":{"module":"%s","moduleResolution":"%s","target":"ES2022","strict":true,"skipLibCheck":false,"types":[],"outDir":"out"},"files":["consumer.ts"]}\n' "$module" "$resolution" > "$project/tsconfig.json"
   # shellcheck disable=SC2086 # one word a package
-  (cd "$project" && npm install --silent --no-audit --no-fund --offline "$tarball" $react && node "$tsc" -p . && node out/consumer.js | sed "s/^/$resolution: /" | cut -c1-120)
+  (cd "$project" && npm install --silent --no-audit --no-fund --prefer-offline "$tarball" $react && node "$tsc" -p . && node out/consumer.js | sed "s/^/$resolution: /" | cut -c1-120)
 done
