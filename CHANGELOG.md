@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- The README's loop is sharper: moving shapes no longer leave pixels behind them.
+
 ## 1.0.1
 
 - The README opens on Morph at work: the reel from its docs, a word turning into a sun, a moon, a star and a heart.

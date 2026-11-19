@@ -3,7 +3,7 @@
 Morph any SVG into another without the spikes: icons, filled shapes, words, one shape into
 several.
 
-[![The word "Morph" set in Inter turning into a sun, the sun into a moon, the moon into Lucide's star, the star into an SVG heart, and the heart breaking into the word's letters](https://cesarvenzac.com/media/a4848390-875f-4df2-94a4-596a78b6ad73.webp)](https://cesarvenzac.com/morph)
+[![The word "Morph" set in Inter turning into a sun, the sun into a moon, the moon into Lucide's star, the star into an SVG heart, and the heart breaking into the word's letters](https://cesarvenzac.com/media/911ad9ce-fd54-4cdb-bfb2-685b9fc247c9.webp)](https://cesarvenzac.com/morph)
 
 Most morphs look generated for the same few reasons: points paired by accident, moved in
 straight lines, and corners that snap in. This pairs shapes by what they look like, moves each
