@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- The README opens on Morph at work: the reel from its docs, a word turning into a sun, a moon, a star and a heart.
+
 ## 1.0.0
 
 Morph takes any SVG now, not only stroked icons: filled shapes in their colours, words set in a

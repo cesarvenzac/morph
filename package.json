@@ -1,6 +1,6 @@
 {
   "name": "@cesarvenzac/morph",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Morph any SVG into another without the spikes: icons, filled shapes and words, one shape into several, paired by their shape, moved whole and drawn as smooth curves.",
   "keywords": [
     "svg",
