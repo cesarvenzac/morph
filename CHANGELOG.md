@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3
+
+- `MorphIcon` and `useMorphing` make the morph to each new source with the `way`, `extra` and `spring` they have then, as their docs said. They kept the ones from their first render: a toggle went on playing its first morph, on its first spring, whatever it was given after.
+- `motion`'s `toward(next, options?)` takes options for that: the next morph is made with them, and it springs on their spring. A morph it's partway along is kept, so nothing jumps; at rest, the one back the way it came is made again with them.
+- The README names `mount`'s options, `svgOf`'s `strokeWidth`, and `reducedMotion`, which says what `prefers-reduced-motion` would otherwise.
+
 ## 1.0.2
 
 - The README's loop is sharper: moving shapes no longer leave pixels behind them.

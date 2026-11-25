@@ -83,6 +83,9 @@ if (text(built, "II").parts.length !== 2) throw new Error("opentype.js's own fon
 let played = motion(plus).toward(x);
 while (!played.settled) played = played.step(1 / 60);
 if (played.frame().filter((part) => part.d).length !== 2) throw new Error("a motion didn't settle on x");
+// Turned back with options of its own: its toggle's morph made again the way they say.
+const back = played.toward(plus, { way: "index", spring: { stiffness: 100, damping: 20 } });
+if (back.target !== 0 || back.morph === played.morph) throw new Error("a motion turned back kept its old way");
 
 // In React, rendered as a server would.
 const icon = renderToStaticMarkup(createElement(MorphIcon, { icon: plus, "aria-label": "Add", size: 32 }));

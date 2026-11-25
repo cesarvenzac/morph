@@ -137,6 +137,33 @@ describe("motion", () => {
     expect(keyOf(ICONS.plus)).toBe(keyOf(JSON.parse(JSON.stringify(ICONS.plus))));
   });
 
+  it("makes its next morph with the options it's turned with, and springs on their spring", () => {
+    const even = motion(ICONS.plus, { way: "even" });
+    // Not given any, it keeps the ones it was made with.
+    expect(even.toward(ICONS.x).morph.at(0.5)).toEqual(morph(ICONS.plus, ICONS.x, "even").at(0.5));
+    const index = even.toward(ICONS.x, { way: "index" });
+    expect(index.morph.at(0.5)).toEqual(morph(ICONS.plus, ICONS.x, "index").at(0.5));
+    // Back the way it came from rest: its toggle's morph made again the new way, from the frame it rests on.
+    const there = play(index).m;
+    const back = there.toward(ICONS.plus, { way: "soft", extra: "auto" });
+    expect(back.morph.at(0.5)).toEqual(morph(ICONS.plus, ICONS.x, "soft").at(0.5));
+    expect([back.t, back.target]).toEqual([1, 0]);
+    expect(ds(back)).toEqual(ds(there));
+    expect(ds(play(back).m)).toEqual(ds(motion(ICONS.plus)));
+    // The same way again keeps the morph it has.
+    expect(there.toward(ICONS.plus, { way: "index" }).morph).toBe(there.morph);
+    // Partway along, the morph it's on is kept, so nothing jumps; the spring is the new one.
+    let going = motion(ICONS.plus).toward(ICONS.x);
+    for (let k = 0; k < 6; k++) going = going.step(1 / 60);
+    const slow = { stiffness: 20, damping: 8 };
+    for (const turned of [going.toward(ICONS.plus, { way: "even", spring: slow }), going.toward(ICONS.x, { spring: slow })]) {
+      expect(turned.morph).toBe(going.morph);
+      expect([turned.t, turned.velocity]).toEqual([going.t, going.velocity]);
+      const [away] = sprung(turned.t - turned.target, turned.velocity, 1 / 60, slow);
+      expect(turned.step(1 / 60).t).toBeCloseTo(turned.target + away, 12);
+    }
+  });
+
   it("takes a spring of its own, and the morph's options", () => {
     const stiff = play(motion(ICONS.plus, { spring: { stiffness: 900, damping: 60 } }).toward(ICONS.x)).seen.length;
     expect(stiff).toBeLessThan(play(motion(ICONS.plus, { spring: PRESS }).toward(ICONS.x)).seen.length);

@@ -68,7 +68,8 @@ draw(document.querySelector("svg")!, m.at(t), m.viewBox); // each frame
 When something changes, a press or a state, the drawing can spring to the next source. Changed
 back mid-way, it turns back from where it is, at the speed it was going; sent somewhere new
 mid-way, it goes on from the frame it's at. `MorphIcon` and `mount` change at once under
-`prefers-reduced-motion`; with `motion`, call `jump()`.
+`prefers-reduced-motion`, or as their `reducedMotion` option says when it's given; with `motion`,
+call `jump()`.
 
 In React:
 
@@ -201,23 +202,26 @@ Read a drawing (above).
 
 A part as a `<path>`'s attributes (`fill`, `stroke`, `stroke-width`, `fill-rule`…), an icon's
 `strokeWidth` wide at a width of 1 (2, unless said). `svgOf` writes the frame at `t` as an SVG
-document; `{ color, width, height }` set the current colour and a size.
+document; `{ color, width, height, strokeWidth }` set the current colour, a size and an icon's
+stroke width, as `attributesOf` takes it.
 
 ### `motion(source, options?)`
 
-A drawing at rest on `source`, immutable: `toward(next)` heads for another source (back the way it
-came if it came from there, on from the frame it's at otherwise), `step(seconds)` moves it along
-its spring, `jump()` puts it where it's headed, and `frame()` is what it draws. It also says its
-`morph`, `t`, `velocity`, `target`, `source`, `viewBox` and whether it's `settled`. Options are
-the morph's (`way`, `extra`) and its `spring`, `{ stiffness, damping }`: `PRESS` unless said, as
-near critically damped as makes no overshoot.
+A drawing at rest on `source`, immutable: `toward(next, options?)` heads for another source (back
+the way it came if it came from there, on from the frame it's at otherwise), `step(seconds)` moves
+it along its spring, `jump()` puts it where it's headed, and `frame()` is what it draws. It also
+says its `morph`, `t`, `velocity`, `target`, `source`, `viewBox` and whether it's `settled`.
+Options are the morph's (`way`, `extra`) and its `spring`, `{ stiffness, damping }`: `PRESS` unless
+said, as near critically damped as makes no overshoot. Given to `toward`, they replace the ones it
+had: the next morph is made with them, and it springs on their spring. A morph it's partway along
+is kept, so nothing jumps; at rest, the one back the way it came is made again with them.
 
 ### `@cesarvenzac/morph/react`
 
 - `<MorphIcon icon size? strokeWidth? spring? way? extra? reducedMotion? />`: an icon, or any
-  drawing, that springs to the next whenever `icon` changes. Hidden from assistive tech unless
-  it's given an `aria-label` (name the button it's in instead); any `<svg>` prop goes on its
-  `<svg>`.
+  drawing, that springs to the next whenever `icon` changes, on the `way`, `extra` and `spring` it
+  has then. Hidden from assistive tech unless it's given an `aria-label` (name the button it's in
+  instead); any `<svg>` prop goes on its `<svg>`.
 - `useMorph(from, to, options?)`: a morph kept across renders, made again only when a side or the
   options say something new (icons written inline are the same icons).
 - `<MorphFrame morph t size? strokeWidth? />`: a morph drawn at `t`, for one you drive yourself.
@@ -229,7 +233,9 @@ React 18 or later, as an optional peer dependency; they're client components.
 ### `@cesarvenzac/morph/dom`
 
 - `mount(svg, source, options?)`: makes an `<svg>` show `source`; `to(next)` springs there,
-  `set(next)` shows it at once, `stop()` stops, and `motion` is where it is.
+  `set(next)` shows it at once, `stop()` stops, and `motion` is where it is. Its options, read once
+  as it's mounted: the morph's `way` and `extra`, the `spring`, an icon's `strokeWidth`, and
+  `reducedMotion`, whether `to` shows the next at once (`prefers-reduced-motion` unless said).
 - `draw(svg, parts, viewBox?, { strokeWidth? })`: parts into an `<svg>`, a `<path>` each, made and
   taken away as their number changes, with no attribute left over from the last frame.
 

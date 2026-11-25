@@ -42,7 +42,8 @@ export type MorphingOptions = MotionOptions & {
 
 /**
  * A source played as `MorphIcon` plays it: what to draw now and on what canvas, springing to each
- * new source. Options are read when the source changes.
+ * new source. Options are read when the source changes: the morph to it is made with the ones
+ * given then, and springs on their spring.
  */
 export function useMorphing(source: Source, options: MorphingOptions = {}) {
   const key = keyOf(source);
@@ -54,12 +55,13 @@ export function useMorphing(source: Source, options: MorphingOptions = {}) {
   });
   useEffect(() => {
     if (key === keyOf(latest.current.source)) return;
-    if (settings.current.reducedMotion ?? prefersReducedMotion()) {
-      latest.current = motion(source, settings.current);
+    const { reducedMotion, ...now } = settings.current;
+    if (reducedMotion ?? prefersReducedMotion()) {
+      latest.current = motion(source, now);
       setCurrent(latest.current);
       return;
     }
-    latest.current = latest.current.toward(source);
+    latest.current = latest.current.toward(source, now);
     setCurrent(latest.current);
     let frame = 0;
     let last = 0;
@@ -135,7 +137,10 @@ export type MorphIconProps = SvgProps &
     size?: number | string;
   };
 
-/** An icon, or any drawing, that springs to the next whenever `icon` changes. */
+/**
+ * An icon, or any drawing, that springs to the next whenever `icon` changes, made with the `way`,
+ * `extra` and `spring` it has then.
+ */
 export function MorphIcon({ icon, size = 24, way, extra, spring, reducedMotion, ...props }: MorphIconProps) {
   const { parts, viewBox } = useMorphing(icon, { way, extra, spring, reducedMotion });
   return <Drawn parts={parts} viewBox={viewBox} size={size} {...props} />;

@@ -41,9 +41,11 @@ export type Motion = {
   /**
    * Headed for `next`: on as it was if it's going there already, back the way it came if it came
    * from there, and otherwise a new morph from what it shows now (at rest, that's the source; on
-   * the way, the frame it's at).
+   * the way, the frame it's at). `options`, when given, take the place of the ones it had: the
+   * next morph is made with them, and it springs on their spring. A morph it's partway along is
+   * kept, so nothing jumps; at rest, the one back the way it came is made again with them.
    */
-  toward(next: Source): Motion;
+  toward(next: Source, options?: MotionOptions): Motion;
   /** `seconds` on, along its spring's exact path: the same at any frame rate, and after a long pause. */
   step(seconds: number): Motion;
   /** Where it's headed, at once: for reduced motion. */
@@ -54,6 +56,9 @@ export type Motion = {
 
 /** What tells two sources apart: the same icon written out twice is the same icon. */
 export const keyOf = (source: Source) => (typeof source === "string" ? source : JSON.stringify(source));
+
+/** What of a motion's options shapes its morphs (the spring only moves it), as morph reads them. */
+const shapingOf = ({ way = "soft", extra = "auto" }: MotionOptions) => JSON.stringify([way, extra]);
 
 /** A stroke this far gone when a motion is turned elsewhere is let go rather than drawn whole again. */
 const GONE = 0.5;
@@ -88,12 +93,19 @@ class Moving implements Motion {
     return this.morph.at(this.t);
   }
 
-  toward(next: Source): Motion {
+  toward(next: Source, given?: MotionOptions): Motion {
     const key = keyOf(next);
-    const { keys, sides, options } = this.state;
-    if (key === keys[this.target]) return this;
+    const { keys, sides } = this.state;
+    const options = given ?? this.state.options;
+    if (key === keys[this.target]) return given ? new Moving({ ...this.state, options }) : this;
     // Back the way it came (or on again), at the speed it was going: a toggle plays its one morph both ways.
-    if (key === keys[1 - this.target]) return new Moving({ ...this.state, target: (1 - this.target) as 0 | 1 });
+    if (key === keys[1 - this.target]) {
+      const target = (1 - this.target) as 0 | 1;
+      // At rest it's on one end, which every way draws exactly as it is: made again with new
+      // options, the morph starts from the same frame.
+      const again = this.settled && given !== undefined && shapingOf(given) !== shapingOf(this.state.options);
+      return new Moving({ ...this.state, ...(again && { morph: morph(sides[0], sides[1], options) }), target, options });
+    }
     const here = this.settled ? sides[this.target] : this.here();
     const hereKey = this.settled ? keys[this.target] : keyOf(here);
     return new Moving({ morph: morph(here, next, options), t: 0, velocity: 0, target: 1, sides: [here, next], keys: [hereKey, key], options });
